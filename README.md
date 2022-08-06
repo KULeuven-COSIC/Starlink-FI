@@ -1,1 +1,3 @@
-# Starlink-FI
+# Starlink User Terminal Modchip
+
+## Known issues / limitations
