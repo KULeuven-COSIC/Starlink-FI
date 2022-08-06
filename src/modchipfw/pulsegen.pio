@@ -1,0 +1,70 @@
+.program pulsegen
+
+; we use 2 bits from the delay bits for side set
+.side_set 2
+
+entry:
+    ; Could probably get rid of these blocking PULLs by enabling autopull and writing to the fifo before enabling the SM?
+    ; Read number of edges
+    PULL BLOCK side 0
+    MOV X, OSR side 0 ; Might want to use OUT here instead of MOV
+    
+    ; Read pulse offset
+    PULL BLOCK side 0
+    MOV Y, OSR side 0
+
+    ; Clear interrupt (might not be needed if we clear it on the M0 side of things?)
+    IRQ CLEAR 0 side 0
+
+nedges:
+    ; Wait for rising-edges
+    WAIT 0 PIN 0 side 0
+    WAIT 1 PIN 0 side 0
+    JMP X-- nedges side 0
+
+    ; Read pulse width
+    ; This will cause a fixed delay between the trigger event and the glitch insertion. Fine for our purposes.
+    PULL BLOCK side 0
+    MOV X, OSR side 0
+
+; Loop for pulse offset cycles
+poffset:
+    JMP Y-- poffset side 2
+
+; Loop for pulse width cycles
+pwidth:
+    JMP X-- pwidth side 3
+
+
+    SET Y, 31 side 2 ; A fixed delay to ensure that the glitch has been inserted before the capacitors are enabled again.
+delay:
+    NOP side 2 [7]
+    NOP side 2 [7]
+    NOP side 2 [7]
+    NOP side 2 [7]
+    NOP side 2 [7]
+    JMP Y-- delay side 2
+
+    ; Signal that the pulse has been inserted, and disable the pulse using sideset
+    IRQ WAIT 0 side 0
+
+
+% c-sdk {
+void pulsegen_program_init(PIO pio, uint sm, uint offset, uint trigger_pin, uint pulse_pin, uint caps_pin) {
+    pio_sm_config c = pulsegen_program_get_default_config(offset);
+
+    sm_config_set_sideset_pins(&c, pulse_pin);
+    sm_config_set_in_pins(&c, trigger_pin);
+    sm_config_set_in_shift(&c, false, false, 32);
+    
+    pio_gpio_init(pio, trigger_pin);
+    pio_gpio_init(pio, pulse_pin);
+    pio_gpio_init(pio, caps_pin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, trigger_pin, 1, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, pulse_pin, 2, true);
+
+    sm_config_set_clkdiv(&c, 1);
+    pio_sm_init(pio, sm, offset, &c);
+}
+%}
