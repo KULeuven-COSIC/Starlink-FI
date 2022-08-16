@@ -40,7 +40,7 @@ class PicoPulseGen:
         
     @property
     def pulse_width(self):
-        return self._pulse_offset
+        return self._pulse_width
 
     
     @pulse_width.setter
