@@ -1,6 +1,6 @@
 # Starlink User Terminal Modchip
 This repository accompanies the talk titled "Glitched on Earth by Humans: A Black-Box Security Evaluation of the SpaceX Starlink User Terminal".
-A slide deck is available [here](./GlitchedOnEarth_slides.pdf), a recording of the talk should be available soon.
+A slide deck is available [here](./GlitchedOnEarth_slides.pdf), a recording of the talk [is available on YouTube](https://www.youtube.com/watch?v=myKs04lfuy8).
 
 The talk covers how we managed to execute arbitrary code on the Starlink User Terminal using a custom modchip that performs voltage fault injection.
 The modchip can be used to bypass signature verification during execution of the System-on-Chip (SoC) ROM bootloader (BL1). This allows to execute arbitrary code on the SoC from BL2 onwards and allows to further explore the Starlink User Terminal and networking side of the system. 
